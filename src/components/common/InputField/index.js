@@ -1,2 +1,2 @@
-// src/components/common/InputField/index.js
+// components/common/InputField/index.js
 export { default } from './InputField';

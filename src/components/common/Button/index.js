@@ -1,3 +1,2 @@
-// CORRECT
-import Button from './Button';
-export default Button;
+// components/common/Button/index.js
+export { default } from './Button';

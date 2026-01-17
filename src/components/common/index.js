@@ -1,7 +1,7 @@
-// src/components/common/index.js
-export { default as Button } from './Button';
-export { default as InputField } from './InputField';
-export { default as Card } from './Card';
-export { default as StatCard } from './StatCard';
+// components/common/index.js
 export { default as Badge } from './Badge';
+export { default as Button } from './Button';
+export { default as Card } from './Card';
+export { default as InputField } from './InputField';
+export { default as StatCard } from './StatCard';
 export { default as SessionPicker } from './SessionPicker';

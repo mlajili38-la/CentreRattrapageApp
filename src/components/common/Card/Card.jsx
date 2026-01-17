@@ -1,41 +1,25 @@
+// components/common/Card/Card.jsx
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../../../constants';
+import { View, StyleSheet } from 'react-native';
 
-const Card = ({ title, children, style, titleStyle, contentStyle, ...props }) => {
+const Card = ({ children, style }) => {
   return (
-    <View style={[styles.card, style]} {...props}>
-      {title && (
-        <View style={styles.header}>
-          <Text style={[styles.title, titleStyle]}>{title}</Text>
-        </View>
-      )}
-      <View style={[styles.content, contentStyle]}>{children}</View>
+    <View style={[styles.container, style]}>
+      {children}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.spacing.borderRadius.lg,
-    ...theme.shadows.medium,
-    overflow: 'hidden',
-  },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight,
-  },
-  title: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.textPrimary,
-  },
-  content: {
-    padding: theme.spacing.lg,
+  container: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
 });
 

@@ -1,91 +1,31 @@
-// src/components/common/Badge/Badge.jsx
+// components/common/Badge/Badge.jsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../../../constants';
 
-const Badge = ({
-  text,
-  type = 'default',
-  size = 'medium',
-  style,
-  textStyle,
-}) => {
-  const getTypeStyles = () => {
+const Badge = ({ text, type = 'danger', style }) => {
+  const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return {
-          backgroundColor: theme.colors.accent + '20',
-          borderColor: theme.colors.accent,
-        };
-      case 'danger':
-        return {
-          backgroundColor: theme.colors.danger + '20',
-          borderColor: theme.colors.danger,
-        };
-      case 'warning':
-        return {
-          backgroundColor: theme.colors.warning + '20',
-          borderColor: theme.colors.warning,
-        };
-      case 'info':
-        return {
-          backgroundColor: theme.colors.info + '20',
-          borderColor: theme.colors.info,
-        };
-      default:
-        return {
-          backgroundColor: theme.colors.lightGray,
-          borderColor: theme.colors.border,
-        };
+      case 'danger': return '#fee2e2';
+      case 'success': return '#d1fae5';
+      case 'warning': return '#fef3c7';
+      case 'info': return '#e0f2fe';
+      default: return '#f1f5f9';
     }
   };
 
   const getTextColor = () => {
     switch (type) {
-      case 'success': return theme.colors.accent;
-      case 'danger': return theme.colors.danger;
-      case 'warning': return theme.colors.warning;
-      case 'info': return theme.colors.info;
-      default: return theme.colors.textSecondary;
+      case 'danger': return '#dc2626';
+      case 'success': return '#059669';
+      case 'warning': return '#d97706';
+      case 'info': return '#0369a1';
+      default: return '#475569';
     }
   };
-
-  const getSizeStyles = () => {
-    switch (size) {
-      case 'small':
-        return {
-          paddingVertical: theme.spacing.xs,
-          paddingHorizontal: theme.spacing.sm,
-        };
-      case 'large':
-        return {
-          paddingVertical: theme.spacing.sm,
-          paddingHorizontal: theme.spacing.lg,
-        };
-      default:
-        return {
-          paddingVertical: theme.spacing.xs,
-          paddingHorizontal: theme.spacing.md,
-        };
-    }
-  };
-
-  const typeStyles = getTypeStyles();
-  const sizeStyles = getSizeStyles();
-  const textColor = getTextColor();
 
   return (
-    <View style={[
-      styles.badge,
-      typeStyles,
-      sizeStyles,
-      style,
-    ]}>
-      <Text style={[
-        styles.text,
-        { color: textColor },
-        textStyle,
-      ]}>
+    <View style={[styles.badge, { backgroundColor: getBgColor() }, style]}>
+      <Text style={[styles.text, { color: getTextColor() }]}>
         {text}
       </Text>
     </View>
@@ -94,13 +34,14 @@ const Badge = ({
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: theme.spacing.borderRadius.full,
-    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.medium,
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
