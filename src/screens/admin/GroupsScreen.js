@@ -27,6 +27,7 @@ import {
 import { db } from '../../services/firebase';
 import Card from '../../components/common/Card/Card';
 import Badge from '../../components/common/Badge/Badge';
+import Checkbox from 'expo-checkbox';
 
 const { width } = Dimensions.get('window');
 
@@ -60,14 +61,6 @@ const GroupsScreen = () => {
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
   const [showTeacherDropdown, setShowTeacherDropdown] = useState(false);
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
-
-  // Références pour gérer les clics en dehors
-  const dropdownRefs = {
-    level: React.useRef(),
-    subject: React.useRef(),
-    teacher: React.useRef(),
-    student: React.useRef()
-  };
 
   // Charger les données
   const loadData = useCallback(async () => {
@@ -459,7 +452,7 @@ const GroupsScreen = () => {
 
   // Obtenir les étudiants filtrés par niveau
   const getFilteredStudents = () => {
-    if (!formData.levelId) return students;
+    if (!formData.levelId) return [];
     return students.filter(student => student.levelId === formData.levelId);
   };
 
@@ -526,7 +519,7 @@ const GroupsScreen = () => {
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Groupes ({filteredGroups.length})</Text>
+        <Text style={styles.headerTitle}>Liste des Groupes ({filteredGroups.length})</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddGroup}>
           <Ionicons name="add-circle" size={24} color="#ffffff" />
         </TouchableOpacity>
@@ -742,7 +735,7 @@ const GroupsScreen = () => {
                 />
               </View>
 
-              {/* SÉLECTION DES ÉLÈVES */}
+              {/* SÉLECTION DES ÉLÈVES - MODIFIÉ AVEC CASES À COCHER VISIBLES */}
               {formData.levelId && (
                 <View style={styles.formGroup}>
                   <View style={styles.studentHeader}>
@@ -760,66 +753,36 @@ const GroupsScreen = () => {
                     {getFilteredStudents().length} élève{getFilteredStudents().length !== 1 ? 's' : ''} disponible{getFilteredStudents().length !== 1 ? 's' : ''} en {getLevelName(formData.levelId)}
                   </Text>
 
-                  {/* Dropdown pour les étudiants */}
-                  <TouchableOpacity
-                    style={styles.studentDropdownButton}
-                    onPress={() => {
-                      closeAllDropdowns();
-                      setShowStudentDropdown(!showStudentDropdown);
-                    }}
-                  >
-                    <Text style={styles.studentDropdownButtonText}>
-                      {formData.studentIds.length > 0 
-                        ? `${formData.studentIds.length} élève(s) sélectionné(s)` 
-                        : "Sélectionner des élèves"}
-                    </Text>
-                    <Ionicons 
-                      name={showStudentDropdown ? "chevron-up" : "chevron-down"} 
-                      size={20} 
-                      color="#64748b" 
-                    />
-                  </TouchableOpacity>
-                  
-                  {showStudentDropdown && (
-                    <View style={styles.studentListWrapper}>
-                      <View style={styles.studentListContainer}>
-                        <ScrollView 
-                          style={styles.studentListScroll}
-                          nestedScrollEnabled={true}
+                  {/* Section de sélection des élèves avec cases à cocher visibles */}
+                  <View style={styles.studentSelectionContainer}>
+                    {getFilteredStudents().length === 0 ? (
+                      <Text style={styles.noStudentsText}>Aucun élève inscrit dans ce niveau</Text>
+                    ) : (
+                      getFilteredStudents().map((student) => (
+                        <TouchableOpacity
+                          key={student.id}
+                          style={[
+                            styles.studentItem,
+                            isStudentSelected(student.id) && styles.studentItemSelected
+                          ]}
+                          onPress={() => handleStudentToggle(student.id)}
                         >
-                          {getFilteredStudents().length === 0 ? (
-                            <Text style={styles.noStudentsText}>Aucun élève inscrit dans ce niveau</Text>
-                          ) : (
-                            getFilteredStudents().map((student) => (
-                              <TouchableOpacity
-                                key={student.id}
-                                style={[
-                                  styles.studentItem,
-                                  isStudentSelected(student.id) && styles.studentItemSelected
-                                ]}
-                                onPress={() => handleStudentToggle(student.id)}
-                              >
-                                <View style={styles.checkboxContainer}>
-                                  <View style={[
-                                    styles.checkbox,
-                                    isStudentSelected(student.id) && styles.checkboxSelected
-                                  ]}>
-                                    {isStudentSelected(student.id) && (
-                                      <Ionicons name="checkmark" size={14} color="#ffffff" />
-                                    )}
-                                  </View>
-                                </View>
-                                <View style={styles.studentInfo}>
-                                  <Text style={styles.studentName}>{student.name}</Text>
-                                  <Text style={styles.studentDetails}>{student.phone}</Text>
-                                </View>
-                              </TouchableOpacity>
-                            ))
-                          )}
-                        </ScrollView>
-                      </View>
-                    </View>
-                  )}
+                          <Checkbox
+                            value={isStudentSelected(student.id)}
+                            onValueChange={() => handleStudentToggle(student.id)}
+                            color={isStudentSelected(student.id) ? '#000000' : undefined}
+                            style={styles.checkbox}
+                          />
+                          <View style={styles.studentInfo}>
+                            <Text style={styles.studentName}>{student.name}</Text>
+                            <Text style={styles.studentDetails}>
+                              {student.phone} • {student.email || 'Pas d\'email'}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))
+                    )}
+                  </View>
                 </View>
               )}
             </ScrollView>
@@ -1170,7 +1133,7 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     marginTop: 4,
   },
-  // STUDENT SELECTION STYLES
+  // STUDENT SELECTION STYLES - MODIFIÉ
   studentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1191,69 +1154,30 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginBottom: 12,
   },
-  studentDropdownButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  studentSelectionContainer: {
     backgroundColor: '#f8fafc',
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 8,
     padding: 12,
-    minHeight: 48,
-  },
-  studentDropdownButtonText: {
-    fontSize: 16,
-    color: '#000000',
-    flex: 1,
-  },
-  studentListWrapper: {
-    position: 'relative',
-    zIndex: 1000,
-  },
-  studentListContainer: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    marginTop: 8,
-    maxHeight: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 1000,
-  },
-  studentListScroll: {
-    maxHeight: 200,
+    maxHeight: 300,
   },
   studentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
   studentItemSelected: {
     backgroundColor: '#f0f9ff',
-  },
-  checkboxContainer: {
-    marginRight: 12,
+    borderRadius: 6,
   },
   checkbox: {
+    marginRight: 12,
     width: 20,
     height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#cbd5e1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxSelected: {
-    backgroundColor: '#000000',
-    borderColor: '#000000',
   },
   studentInfo: {
     flex: 1,

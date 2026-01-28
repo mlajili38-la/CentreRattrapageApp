@@ -1,12 +1,16 @@
-// App.js
+// App.js - VERSION CORRIGÉE
 import React from 'react';
 import { AuthProvider } from './src/contexts/AuthContext';
-import AppNavigator from './src/navigation/AppNavigator';
-
-export default function App() {
+import { DataProvider } from './src/contexts/DataContext';
+import AppNavigator from './src/navigation/AppNavigator'; 
+const App = () => {
   return (
     <AuthProvider>
-      <AppNavigator />
+      <DataProvider>
+        <AppNavigator />
+      </DataProvider>
     </AuthProvider>
   );
-}
+};
+
+export default App;

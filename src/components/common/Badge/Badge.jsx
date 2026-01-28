@@ -5,7 +5,7 @@ import { View, Text, StyleSheet } from 'react-native';
 const Badge = ({ text, type = 'danger', style }) => {
   const getBgColor = () => {
     switch (type) {
-      case 'danger': return '#fee2e2';
+      case 'danger': return '#000000';
       case 'success': return '#d1fae5';
       case 'warning': return '#fef3c7';
       case 'info': return '#e0f2fe';
@@ -15,7 +15,7 @@ const Badge = ({ text, type = 'danger', style }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'danger': return '#dc2626';
+      case 'danger': return '#efe2e2';
       case 'success': return '#059669';
       case 'warning': return '#d97706';
       case 'info': return '#0369a1';

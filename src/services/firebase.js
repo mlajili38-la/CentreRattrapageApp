@@ -1,11 +1,10 @@
-// Firebase JS SDK (pour React Native avec Expo)
+// src/services/firebase.js - VERSION CORRIGÉE
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
-// Votre configuration Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCa_Ri4775mSkBRKpJz4wxQBNyU1IzvQZ8",
   authDomain: "ratrappage.firebaseapp.com",
@@ -18,16 +17,17 @@ const firebaseConfig = {
 // Initialiser Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialiser Auth avec AsyncStorage pour la persistance
+// ✅ CORRECTION : Utiliser initializeAuth avec persistence
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 });
 
-// Initialiser Firestore
+// Initialiser Firestore et Storage
 const db = getFirestore(app);
-
-// Initialiser Storage
 const storage = getStorage(app);
 
+// Pour compatibilité avec le code existant
 export { auth, db, storage };
+
+// Exporter l'instance app au cas où
 export default app;

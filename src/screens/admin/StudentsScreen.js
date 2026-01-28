@@ -16,7 +16,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
-import Checkbox from 'expo-checkbox';
 import Card from '../../components/common/Card/Card';
 import Badge from '../../components/common/Badge/Badge';
 
@@ -46,6 +45,11 @@ const StudentsScreen = () => {
     groupIds: [],
     address: '',
   });
+
+  // États pour les dropdowns
+  const [showLevelDropdown, setShowLevelDropdown] = useState(false);
+  const [showGroupsDropdown, setShowGroupsDropdown] = useState(false);
+  const [selectedGroups, setSelectedGroups] = useState([]);
 
   // Charger les données
   const loadData = async () => {
@@ -152,6 +156,7 @@ const StudentsScreen = () => {
       groupIds: [],
       address: '',
     });
+    setSelectedGroups([]);
     setModalVisible(true);
   };
 
@@ -168,34 +173,46 @@ const StudentsScreen = () => {
       groupIds: student.groupIds || [],
       address: student.address || '',
     });
+    setSelectedGroups(student.groupIds || []);
     setModalVisible(true);
   };
 
-  // Gérer les checkboxes de niveaux
-  const handleLevelToggle = (levelId) => {
-    setFormData({ ...formData, levelId: formData.levelId === levelId ? '' : levelId });
+  // Sélectionner un niveau
+  const handleLevelSelect = (levelId) => {
+    setFormData({ ...formData, levelId });
+    setShowLevelDropdown(false);
   };
 
-  // Gérer les checkboxes de groupes
+  // Sélectionner/désélectionner un groupe
   const handleGroupToggle = (groupId) => {
-    const currentGroupIds = [...formData.groupIds];
+    let updatedGroups = [...selectedGroups];
     
-    if (currentGroupIds.includes(groupId)) {
-      const updatedIds = currentGroupIds.filter(id => id !== groupId);
-      setFormData({ ...formData, groupIds: updatedIds });
+    if (updatedGroups.includes(groupId)) {
+      updatedGroups = updatedGroups.filter(id => id !== groupId);
     } else {
-      setFormData({ ...formData, groupIds: [...currentGroupIds, groupId] });
+      updatedGroups.push(groupId);
     }
-  };
-
-  // Vérifier si un niveau est sélectionné
-  const isLevelSelected = (levelId) => {
-    return formData.levelId === levelId;
+    
+    setSelectedGroups(updatedGroups);
+    setFormData({ ...formData, groupIds: updatedGroups });
   };
 
   // Vérifier si un groupe est sélectionné
   const isGroupSelected = (groupId) => {
-    return formData.groupIds.includes(groupId);
+    return selectedGroups.includes(groupId);
+  };
+
+  // Sélectionner tous les groupes
+  const handleSelectAllGroups = () => {
+    const allGroupIds = groups.map(g => g.id);
+    setSelectedGroups(allGroupIds);
+    setFormData({ ...formData, groupIds: allGroupIds });
+  };
+
+  // Désélectionner tous les groupes
+  const handleDeselectAllGroups = () => {
+    setSelectedGroups([]);
+    setFormData({ ...formData, groupIds: [] });
   };
 
   // Supprimer un étudiant
@@ -528,7 +545,7 @@ const StudentsScreen = () => {
         </ScrollView>
       )}
 
-      {/* MODAL POUR AJOUTER/MODIFIER UN ÉLÈVE - NIVEAU EN CHECKBOXES */}
+      {/* MODAL POUR AJOUTER/MODIFIER UN ÉLÈVE AVEC DROPDOWNS */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -595,53 +612,137 @@ const StudentsScreen = () => {
                 />
               </View>
 
-              {/* NIVEAU - Checkboxes */}
+              {/* NIVEAU - Dropdown */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Niveau *</Text>
-                {levels.length === 0 ? (
-                  <Text style={styles.noLevelsText}>Aucun niveau disponible</Text>
-                ) : (
-                  <View style={styles.checkboxGrid}>
-                    {levels.map((level) => (
-                      <View key={level.id} style={styles.checkboxContainer}>
-                        <Checkbox
-                          value={isLevelSelected(level.id)}
-                          onValueChange={() => handleLevelToggle(level.id)}
-                          color={isLevelSelected(level.id) ? '#000000' : undefined}
-                          style={styles.checkbox}
-                        />
-                        <Text style={styles.checkboxLabel}>
-                          {level.name}
-                        </Text>
-                      </View>
-                    ))}
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => setShowLevelDropdown(!showLevelDropdown)}
+                >
+                  <Text style={[
+                    styles.dropdownButtonText,
+                    !formData.levelId && styles.placeholderText
+                  ]}>
+                    {formData.levelId 
+                      ? getLevelName(formData.levelId)
+                      : 'Sélectionnez un niveau'
+                    }
+                  </Text>
+                  <Ionicons 
+                    name={showLevelDropdown ? "chevron-up" : "chevron-down"} 
+                    size={20} 
+                    color="#64748b" 
+                  />
+                </TouchableOpacity>
+                
+                {showLevelDropdown && (
+                  <View style={styles.dropdownList}>
+                    <ScrollView style={styles.dropdownScroll}>
+                      {levels.length === 0 ? (
+                        <Text style={styles.noLevelsText}>Aucun niveau disponible</Text>
+                      ) : (
+                        levels.map((level) => (
+                          <TouchableOpacity
+                            key={level.id}
+                            style={[
+                              styles.dropdownItem,
+                              formData.levelId === level.id && styles.dropdownItemSelected
+                            ]}
+                            onPress={() => handleLevelSelect(level.id)}
+                          >
+                            <Text style={[
+                              styles.dropdownItemText,
+                              formData.levelId === level.id && styles.dropdownItemTextSelected
+                            ]}>
+                              {level.name}
+                            </Text>
+                            {formData.levelId === level.id && (
+                              <Ionicons name="checkmark" size={18} color="#000000" />
+                            )}
+                          </TouchableOpacity>
+                        ))
+                      )}
+                    </ScrollView>
                   </View>
                 )}
+                
                 {!formData.levelId && (
                   <Text style={styles.errorText}>Sélectionnez un niveau</Text>
                 )}
               </View>
 
-              {/* GROUPES */}
+              {/* GROUPES - Multi-select Dropdown */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Groupes</Text>
-                {groups.length === 0 ? (
-                  <Text style={styles.noGroupsText}>Aucun groupe disponible</Text>
-                ) : (
-                  <View style={styles.checkboxGrid}>
-                    {groups.map((group) => (
-                      <View key={group.id} style={styles.checkboxContainer}>
-                        <Checkbox
-                          value={isGroupSelected(group.id)}
-                          onValueChange={() => handleGroupToggle(group.id)}
-                          color={isGroupSelected(group.id) ? '#000000' : undefined}
-                          style={styles.checkbox}
-                        />
-                        <Text style={styles.checkboxLabel}>
-                          {group.name}
-                        </Text>
-                      </View>
-                    ))}
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => setShowGroupsDropdown(!showGroupsDropdown)}
+                >
+                  <Text style={[
+                    styles.dropdownButtonText,
+                    selectedGroups.length === 0 && styles.placeholderText
+                  ]}>
+                    {selectedGroups.length === 0
+                      ? 'Sélectionnez des groupes'
+                      : `${selectedGroups.length} groupe(s) sélectionné(s)`
+                    }
+                  </Text>
+                  <Ionicons 
+                    name={showGroupsDropdown ? "chevron-up" : "chevron-down"} 
+                    size={20} 
+                    color="#64748b" 
+                  />
+                </TouchableOpacity>
+                
+                {showGroupsDropdown && (
+                  <View style={styles.dropdownList}>
+                    <View style={styles.dropdownHeader}>
+                      <TouchableOpacity 
+                        style={styles.selectAllButton}
+                        onPress={handleSelectAllGroups}
+                      >
+                        <Text style={styles.selectAllText}>Tout sélectionner</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.selectAllButton}
+                        onPress={handleDeselectAllGroups}
+                      >
+                        <Text style={styles.selectAllText}>Tout désélectionner</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <ScrollView style={styles.dropdownScroll}>
+                      {groups.length === 0 ? (
+                        <Text style={styles.noGroupsText}>Aucun groupe disponible</Text>
+                      ) : (
+                        groups.map((group) => (
+                          <TouchableOpacity
+                            key={group.id}
+                            style={[
+                              styles.dropdownItem,
+                              isGroupSelected(group.id) && styles.dropdownItemSelected
+                            ]}
+                            onPress={() => handleGroupToggle(group.id)}
+                          >
+                            <View style={styles.checkboxWrapper}>
+                              <View style={[
+                                styles.customCheckbox,
+                                isGroupSelected(group.id) && styles.customCheckboxSelected
+                              ]}>
+                                {isGroupSelected(group.id) && (
+                                  <Ionicons name="checkmark" size={14} color="#ffffff" />
+                                )}
+                              </View>
+                              <Text style={[
+                                styles.dropdownItemText,
+                                isGroupSelected(group.id) && styles.dropdownItemTextSelected
+                              ]}>
+                                {group.name}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        ))
+                      )}
+                    </ScrollView>
                   </View>
                 )}
               </View>
@@ -921,6 +1022,7 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
   },
+  
   // MODAL STYLES
   modalOverlay: {
     flex: 1,
@@ -979,25 +1081,93 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
-  // Styles pour les checkboxes des niveaux
-  checkboxGrid: {
+  
+  // DROPDOWN STYLES
+  dropdownButton: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    width: '48%',
-    marginBottom: 10,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 12,
   },
-  checkbox: {
-    marginRight: 8,
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#000000',
   },
-  checkboxLabel: {
+  placeholderText: {
+    color: '#94a3b8',
+  },
+  dropdownList: {
+    marginTop: 4,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    maxHeight: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  dropdownHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  selectAllButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  selectAllText: {
+    fontSize: 12,
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  dropdownScroll: {
+    maxHeight: 150,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#f8fafc',
+  },
+  dropdownItemText: {
     fontSize: 14,
     color: '#000000',
+  },
+  dropdownItemTextSelected: {
+    fontWeight: '600',
+  },
+  checkboxWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  customCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customCheckboxSelected: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
   },
   errorText: {
     fontSize: 12,
@@ -1008,6 +1178,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94a3b8',
     fontStyle: 'italic',
+    padding: 12,
+    textAlign: 'center',
   },
   cancelButton: {
     flex: 1,

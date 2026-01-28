@@ -25,23 +25,10 @@ const LoginScreen = () => { // Retirez navigation des props
   const [formErrors, setFormErrors] = useState({});
 
   // 🔥 AJOUTEZ CET EFFET POUR LA REDIRECTION
-  useEffect(() => {
-    console.log('🔍 useEffect - isAuthenticated:', isAuthenticated);
-    console.log('🔍 useEffect - user:', user);
-    
-    if (isAuthenticated && user) {
-      console.log('✅ Utilisateur connecté, redirection vers AdminScreen');
-      
-      // Petit délai pour laisser l'animation se terminer
-      setTimeout(() => {
-        if (user.role === 'admin' || user.email?.includes('admin')) {
-          console.log('🚀 Navigation vers Admin');
-          navigation.replace('Admin');
-        }
-        // Vous pouvez ajouter d'autres redirections ici
-      }, 500);
-    }
-  }, [isAuthenticated, user, navigation]);
+  // Dans LoginScreen.jsx - modifiez le useEffect
+// Dans LoginScreen.jsx - modifiez juste la condition pour les étudiants
+// Dans LoginScreen.jsx - corriger le useEffect
+
 
   /* ================= VALIDATION ================= */
   const validateForm = () => {
@@ -53,12 +40,36 @@ const LoginScreen = () => { // Retirez navigation des props
   };
 
   /* ================= LOGIN ================= */
-  const handleLogin = async () => {
-    if (!validateForm()) return;
-    console.log('🔄 Tentative de connexion avec:', email);
-    const result = await login(email, password);
-    console.log('📊 Résultat login:', result);
-  };
+  // screens/LoginScreen.jsx - MODIFIEZ la fonction handleLogin
+// Dans LoginScreen.js - MODIFIEZ la fonction handleLogin
+const handleLogin = async () => {
+  if (!validateForm()) return;
+  console.log('🔄 Tentative de connexion avec:', email);
+  
+  const result = await login(email, password);
+  console.log('📊 Résultat login:', result);
+  
+  // Navigation MANUELLE après login réussi
+  if (result.success && result.user) {
+    console.log('✅ Login réussi, navigation vers:', result.user.role);
+    
+    // Petit délai pour UX
+    setTimeout(() => {
+      if (result.user.role === 'admin') {
+        console.log('🚀 Navigation vers Admin');
+        navigation.replace('Admin');
+      } 
+      else if (result.user.role === 'student') {
+        console.log('🎓 Navigation vers Student');
+        navigation.replace('Student');
+      }
+      else if (result.user.role === 'teacher') { // AJOUTEZ CETTE CONDITION
+        console.log('👨‍🏫 Navigation vers Teacher');
+        navigation.replace('Teacher');
+      }
+    }, 300);
+  }
+};
 
   /* ================= REMPLISSAGE DEMO ================= */
   const fillDemoAccount = (demoEmail, demoPassword) => {
@@ -152,30 +163,8 @@ const LoginScreen = () => { // Retirez navigation des props
               style={{ marginTop: 12 }}
             />
 
-            <View style={styles.separator} />
 
-            <Text style={styles.demoTitle}>Comptes de démonstration</Text>
             
-            <DemoRow
-              role="Administrateur"
-              email="admin@centre.ma"
-              password="admin123"
-              onPress={() => fillDemoAccount('admin@centre.ma','admin123')}
-            />
-            <DemoRow
-              role="Enseignant"
-              email="prof.math@centre.ma"
-              password="prof123"
-              onPress={() => fillDemoAccount('prof.math@centre.ma', 'prof123')}
-            />
-            <DemoRow
-              role="Élève"
-              email="eleve1@gmail.com"
-              password="eleve123"
-              onPress={() => fillDemoAccount('eleve1@gmail.com', 'eleve123')}
-            />
-            
-            <View style={styles.bottomSpacer} />
           </View>
         </ScrollView>
       </LinearGradient>
